@@ -1,29 +1,21 @@
-# KW Explore — Marketing Deck Generator (Static Web App)
+# KW Explore — Marketing Deck Generator (Updated)
 
-This folder contains a single–page web app that builds a full marketing asset pack for any property:
-- PPTX marketing deck
-- Social PNGs (IG/Facebook/Reel cards)
-- QR codes (WhatsApp + site)
-- One‑page property site (HTML) + PWA icons/manifest
-- Copy pack (TXT)
-- KPI tracker (XLSX)
-- Optional: email ZIP via EmailJS
+This bundle contains:
+- `index.html`: Single-file web app (branding uploads, PWA icons, EmailJS)
+- `assets/logo.png`: KW Explore logo (used in deck/social/site)
+- `assets/icons/`: favicon (16/32), Apple 180, Android 192/512, source icon
+- `manifest.webmanifest`: PWA manifest
 
-## Quick start
-1. Open **index.html** in your browser and fill in the fields.
-2. Click **Generate Asset Pack** to download a ZIP.
-3. (Optional) Enter your EmailJS keys and press **Email Results (ZIP)** to email the pack.
+## Email sending
+Emails are sent **FROM**: `Dawie du Toit <dawie.dutoit@kwsa.co.za>` **TO**: the Agent Email you enter.
+Configure EmailJS (public key, service ID, template ID) and add your GitHub Pages domain to **Allowed Origins**.
 
-## Deploy to GitHub Pages
-1. Create a repo and commit the content of this folder.
-2. Settings → Pages → Source: **Deploy from a branch**; Branch: **main**; Folder: **/**.
-3. Your site will be available at `https://<username>.github.io/<repo>/`.
+Template variables the app sends:
+- `to_email`, `to_name`, `from_email`, `from_name`, `reply_to`
+- `property_address`, `suburb`, `wa_link`, `filename`, optional base64 `content` (ZIP attachment <= ~10MB)
 
-## Branding
-- Replace **assets/logo.png** with your KW Explore logo (PNG/SVG rasterized to PNG).
-- Replace **assets/icons/icon-source.png** with your app icon; we generated sizes for desktop & Android: 16/32/180/192/512.
+## Deploy on GitHub Pages
+1) Create a new repo and upload all files in this ZIP.
+2) Settings → Pages → Deploy from a branch → `main` / `(root)`.
+3) Open the published URL, fill in the form, and generate/email the asset pack.
 
-## EmailJS
-Create a Service and Template. Allow your Pages domain in EmailJS settings.
-Template variables used by the app:
-- `to_email`, `property_address`, `suburb`, `wa_link`, `filename`, and optional base64 `content` for the ZIP.
