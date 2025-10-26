@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KW Explore • Marketing Deck Generator</title>
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Inter font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <!-- Icons & manifest -->
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#D40511" />
+  <style>
+    :root { --kw-red: #D40511; --kw-dark:#333333; --kw-light:#F2F2F2 }
+    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif }
+    .card { border-radius: 1rem; box-shadow: 0 10px 24px rgba(0,0,0,.08) }
+    .pill { display:inline-block; background:#fff; border:1px solid #eee; border-radius:999px; padding:.25rem .6rem; margin-right:.4rem }
+    .hint { color:#6b7280 }
+  </style>
+  <!-- JS libs -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- EmailJS (client-side email) -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>
+    (function(){
+      try{
+        const pk = localStorage.getItem('emailjs_public_key') || '';
+        if(pk) emailjs.init({ publicKey: pk });
+      }catch(e){ console.warn('EmailJS init skipped', e) }
+    })();
+  </script>
+</head>
+<body class="bg-[var(--kw-light)] text-[var(--kw-dark)]">
+  <header class="bg-white sticky top-0 z-10 shadow">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="assets/logo.png" alt="KW Explore" class="h-8"/>
+        <h1 class="text-xl font-extrabold tracking-tight">KW Explore — Marketing Deck Generator</h1>
+      </div>
+      <div class="text-sm hint">Single‑file web app • Host on GitHub Pages</div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6">
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <!-- Left column: form -->
+      <section class="xl:col-span-2 card bg-white p-5">
+        <h2 class="text-lg font-bold mb-4">Property Inputs</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold">Address</label>
+            <input id="address" class="w-full mt-1 rounded-xl border p-2" placeholder="20 Burn Way, Kelvin, Sandton" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold">Suburb</label>
+            <input id="suburb" class="w-full mt-1 rounded-xl border p-2" placeholder="Kelvin" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold">Municipality</label>
+            <input id="municipality" class="w-full mt-1 rounded-xl border p-2" placeholder="City of Johannesburg" />
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="block text-sm font-semibold">Erf m²</label>
+              <input id="erf" type="number" class="w-full mt-1 rounded-xl border p-2" placeholder="1835" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold">Floor m²</label>
+              <input id="floor" type="number" class="w-full mt-1 rounded-xl border p-2" placeholder="711" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold">Bedrooms</label>
+              <input id="bed" type="number" class="w-full mt-1 rounded-xl border p-2" placeholder="4" />
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="block text-sm font-semibold">Bathrooms</label>
+              <input id="bath" class="w-full mt-1 rounded-xl border p-2" placeholder="3.5" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold">Garages</label>
+              <input id="garages" type="number" class="w-full mt-1 rounded-xl border p-2" placeholder="2" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold">Extra Parking</label>
+              <input id="parking" type="number" class="w-full mt-1 rounded-xl border p-2" placeholder="4" />
+            </div>
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm font-semibold">Amenities (comma‑separated)</label>
+            <input id="amenities" class="w-full mt-1 rounded-xl border p-2" value="Pool, Lapa/entertainment, WFH/Flatlet potential, Big private garden" />
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm font-semibold">Location Hooks (comma‑separated)</label>
+            <input id="hooks" class="w-full mt-1 rounded-xl border p-2" value="Quick access to Sandton corridors, Proximity to schools" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold">Agent Name</label>
+            <input id="agent" class="w-full mt-1 rounded-xl border p-2" value="Dawie du Toit" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold">Office</label>
+            <input id="office" class="w-full mt-1 rounded-xl border p-2" value="Keller Williams Explore Fourways" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold">WhatsApp (27#########)</label>
+            <input id="wa" class="w-full mt-1 rounded-xl border p-2" value="27XXXXXXXXX" />
+            <p class="text-xs hint mt-1">Numbers only. We’ll build the deep link automatically.</p>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold">Microsite URL (optional)</label>
+            <input id="site" class="w-full mt-1 rounded-xl border p-2" value="https://example.com/property-page" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold">Showday Time</label>
+            <input id="showday" class="w-full mt-1 rounded-xl border p-2" value="Sunday 14:00–16:00" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold">Private Slots (comma‑separated)</label>
+            <input id="slots" class="w-full mt-1 rounded-xl border p-2" value="Wed 17:30, Sat 11:00" />
+          </div>
+        </div>
+
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="card bg-[var(--kw-light)] p-4">
+            <div class="text-sm font-semibold">WhatsApp Deep Link (auto)</div>
+            <div id="waLink" class="text-xs break-all mt-1"></div>
+          </div>
+          <div class="card bg-[var(--kw-light)] p-4">
+            <div class="text-sm font-semibold">Brand</div>
+            <div class="text-xs">Red <span class="pill">#D40511</span> Dark <span class="pill">#333333</span> Light <span class="pill">#F2F2F2</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Email delivery (optional) -->
+        <div class="card bg-[var(--kw-light)] p-4 mt-6">
+          <div class="text-sm font-semibold">Email delivery (optional)</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+            <div>
+              <label class="block text-xs font-semibold">Send to</label>
+              <input id="toEmail" class="w-full mt-1 rounded-xl border p-2" value="dawie.dutoit@kwsa.co.za" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold">EmailJS Public Key</label>
+              <input id="emailjsPublicKey" class="w-full mt-1 rounded-xl border p-2" placeholder="e.g. XyZ123PUBLIC" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold">EmailJS Service ID</label>
+              <input id="emailjsServiceId" class="w-full mt-1 rounded-xl border p-2" placeholder="service_xxxxxx" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold">EmailJS Template ID</label>
+              <input id="emailjsTemplateId" class="w-full mt-1 rounded-xl border p-2" placeholder="template_xxxxxx" />
+            </div>
+          </div>
+          <div class="text-xs hint mt-2">Tip: In your EmailJS dashboard, set <em>Allowed Origins</em> to your GitHub Pages domain to prevent abuse.</div>
+          <div class="mt-3 flex gap-2">
+            <button id="btnSaveEmailCfg" class="px-4 py-2 rounded-xl border font-semibold">Save Email Config</button>
+            <button id="btnEmailZip" class="px-4 py-2 rounded-xl text-white font-semibold" style="background:var(--kw-red)">Email Results (ZIP)</button>
+          </div>
+        </div>
+
+        <div class="mt-6 flex gap-3">
+          <button id="btnGen" class="px-5 py-3 rounded-2xl text-white font-semibold" style="background:var(--kw-red)">Generate Asset Pack</button>
+          <button id="btnDeck" class="px-5 py-3 rounded-2xl border font-semibold">Generate Marketing Deck (PPTX)</button>
+        </div>
+      </section>
+
+      <!-- Right column: helper text -->
+      <aside class="card bg-white p-5">
+        <h3 class="font-bold mb-3">What this generates</h3>
+        <ul class="list-disc pl-6 text-sm space-y-1">
+          <li>One‑page property site (HTML)</li>
+          <li>Social creatives PNGs: IG x3, FB still, Reel title & outro</li>
+          <li>QR codes (WhatsApp + Site)</li>
+          <li>Copy pack (portal & ads) — TXT</li>
+          <li>KPI Tracker — XLSX</li>
+          <li>Marketing Deck — PPTX</li>
+          <li>Everything zipped for sharing</li>
+        </ul>
+        <hr class="my-4"/>
+        <h3 class="font-bold mb-2">Tips</h3>
+        <p class="text-sm hint">Replace WhatsApp number and update your showday time. Swap real photos in the site folder after download.</p>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const $ = (sel) => document.querySelector(sel)
+    const byId = (id) => document.getElementById(id)
+
+    function slugify(str){
+      return (str||'').toLowerCase().replace(/\\s+/g,'-').replace(/[^a-z0-9\\-]/g,'').replace(/\\-+/g,'-')
+    }
+
+    function waLink(){
+      const addr = byId('address').value.trim()
+      const agent = byId('agent').value.trim()||'Dawie'
+      const num = byId('wa').value.trim()
+      const encAddr = encodeURIComponent(addr)
+      return `https://wa.me/${num}?text=Hi%20${encodeURIComponent(agent)}%2C%20I%E2%80%99d%20like%20to%20view%20${encAddr}.%20When%20is%20next%20available%3F`
+    }
+
+    function updatePreview(){ byId('waLink').textContent = waLink() }
+    document.addEventListener('input', updatePreview)
+    window.addEventListener('DOMContentLoaded', updatePreview)
+
+    async function loadLogoDataUrl(){
+      try{ const r = await fetch('assets/logo.png'); const b = await r.blob(); return await blobToDataURL(b) }catch(e){ return '' }
+    }
+
+    // -------- QR helpers --------
+    async function makeQrDataUrl(text, size=512){
+      return await QRCode.toDataURL(text, { width:size, margin:2, errorCorrectionLevel:'M'})
+    }
+
+    // -------- Canvas image helpers --------
+    async function drawSocial({w,h,title,subtitle,footer,qrDataUrl,tag, logoDataUrl}){
+      const c = document.createElement('canvas'); c.width=w; c.height=h; const ctx=c.getContext('2d')
+      // bg
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,w,h)
+      // top band
+      ctx.fillStyle = '#F2F2F2'; ctx.fillRect(0,0,w, Math.floor(h/3))
+      // footer band
+      ctx.fillStyle = '#D40511'; ctx.fillRect(0,h-120,w,120)
+      // tag pill
+      ctx.fillStyle = '#D40511'; ctx.fillRect(30,30, Math.min(30+ (tag?.length||0)*18, w-60), 70)
+      ctx.fillStyle = '#ffffff'; ctx.font = `${h>1500?48:36}px Inter, Arial`;
+      ctx.fillText(tag||'', 45, 80)
+      // title & subtitle
+      ctx.fillStyle = '#333333';
+      ctx.font = `${h>1500?80:56}px Inter, Arial`; wrapText(ctx, title||'', 30, Math.floor(h/3)+60, w-60, h>1500?84:64)
+      ctx.font = `${h>1500?44:30}px Inter, Arial`; wrapText(ctx, subtitle||'', 30, Math.floor(h/3)+ (h>1500?160:120), w-60, h>1500?54:40)
+      // footer text
+      ctx.fillStyle = '#ffffff'; ctx.font = `${h>1500?32:24}px Inter, Arial`; ctx.fillText(footer||'', 30, h-45)
+      // logo
+      if(logoDataUrl){ const limg=new Image(); limg.src=logoDataUrl; await new Promise(res=>{ limg.onload=()=>{ const lw=Math.min(220, w*0.22); const lh=lw*(limg.height/limg.width); ctx.drawImage(limg, 30, 30, lw, lh); res() }; limg.onerror=()=>res() }) }
+      // QR
+      if(qrDataUrl){ const img=new Image(); img.src=qrDataUrl; return new Promise(res=>{ img.onload=()=>{ ctx.drawImage(img, w-240, h-240, 200,200); ctx.fillText('Book viewing', w-240, h-20); res(c.toDataURL('image/png')) }}) }
+      return c.toDataURL('image/png')
+    }
+
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight){
+      const words = (text||'').split(' '); let line=''; let yy=y
+      for(let n=0;n<words.length;n++){
+        const test = line + words[n] + ' ';
+        const m = ctx.measureText(test);
+        if(m.width > maxWidth && n>0){ ctx.fillText(line, x, yy); line=words[n] + ' '; yy += lineHeight }
+        else line = test
+      }
+      ctx.fillText(line, x, yy)
+    }
+
+    // -------- Build files --------
+    function collectInputs(){
+      const data = {
+        address: byId('address').value.trim(),
+        suburb: byId('suburb').value.trim(),
+        municipality: byId('municipality').value.trim(),
+        erf: byId('erf').value.trim(),
+        floor: byId('floor').value.trim(),
+        bed: byId('bed').value.trim(),
+        bath: byId('bath').value.trim(),
+        garages: byId('garages').value.trim(),
+        parking: byId('parking').value.trim(),
+        amenities: byId('amenities').value.split(',').map(s=>s.trim()).filter(Boolean),
+        hooks: byId('hooks').value.split(',').map(s=>s.trim()).filter(Boolean),
+        agent: byId('agent').value.trim(),
+        office: byId('office').value.trim(),
+        wa: byId('wa').value.trim(),
+        microsite: byId('site').value.trim(),
+        showday: byId('showday').value.trim(),
+        slots: byId('slots').value.split(',').map(s=>s.trim()).filter(Boolean),
+      }
+      return data
+    }
+
+    function buildOnePagerHTML(d, waUrl){
+      const title = `${d.address} • KW Explore`
+      const line = 'Big‑stand family home • Flexible WFH/flatlet options • Pool • Secure parking'
+      const pills = [...d.amenities, ...d.hooks]
+      return `<!doctype html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>${escapeHtml(title)}</title>
+      <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+      <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
+      <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
+      <link rel="manifest" href="manifest.webmanifest">
+      <style>body{font-family:Inter,Arial,sans-serif;margin:0;color:#333} header{background:#F2F2F2;padding:24px} .hero{max-width:1100px;margin:0 auto;padding:32px 16px} .cta{background:#D40511;color:#fff;padding:14px 22px;border-radius:10px;text-decoration:none} .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px} .card{background:#fff;border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.08);padding:18px} footer{background:#333;color:#fff;padding:24px;text-align:center;margin-top:40px} img.resp{width:100%;height:auto;border-radius:12px} .pill{display:inline-block;padding:6px 10px;background:#fff;border:1px solid #eee;border-radius:999px;margin:4px 6px 0 0;font-size:14px} </style>
+      </head><body>
+      <header><div class="hero"><img src="../assets/logo.png" style="height:28px;vertical-align:middle;margin-right:10px"/><h1 style="display:inline-block;margin:0">${escapeHtml(d.address)}</h1><p style="margin:.5rem 0">${escapeHtml(line)}</p><a class="cta" href="${waUrl}" target="_blank">Book a Viewing on WhatsApp</a></div></header>
+      <main class="hero"><section class="grid">
+        <div class="card"><h3>Highlights</h3>${pills.map(p=>`<span class="pill">${escapeHtml(p)}</span>`).join('')}</div>
+        <div class="card"><h3>Gallery</h3><p>Add photos to this folder and embed here.</p></div>
+        <div class="card"><h3>Plans</h3><p>Attach floor plan and stand diagram here (PNG/PDF).</p></div>
+        <div class="card"><h3>Location</h3><p>Pin key routes and schools; include drive times.</p><a class="cta" href="${waUrl}" target="_blank">Chat now</a></div>
+      </section></main>
+      <footer>KW Explore Fourways • © ${(new Date()).getFullYear()}</footer>
+      </body></html>`
+    }
+
+    function buildCopyTxt(d, waUrl){
+      return `PORTAL HEADLINE\\nBig‑Stand Living in ${d.suburb} — Flexible Family Home + Pool\\n\\nPORTAL SHORT DESCRIPTION\\nBig‑stand family home in ${d.suburb} with flexible spaces for work‑from‑home or multi‑generational living. Private garden, pool and generous parking. Quick access to Sandton corridors. Book your viewing today.\\n\\nPORTAL BULLETS\\n• ±${d.erf || '1 8xx'} m² erf\\n• Pool & entertainment lapa\\n• Flexible WFH/flatlet options\\n• Parking for ${d.parking||'6+'} incl. double garage\\n• Quick access to Sandton corridors\\n\\nFACEBOOK/INSTAGRAM – SHORT AD\\nJUST LISTED • ${d.suburb} — Big‑stand family home with pool, flexible spaces and secure parking. Book a viewing: ${waUrl}\\n\\nFACEBOOK/INSTAGRAM – SHOWDAY INVITE\\nShowday ${d.showday} • ${d.address}. Pre‑book to skip the queue: ${waUrl}\\n\\nRETARGETING COPY\\nLoved the ${d.suburb} home? Book a private 25‑minute tour to measure and plan. Tap here: ${waUrl}\\n\\nWHATSAPP QUICK REPLIES\\n1) Thanks for reaching out about ${d.address}. Next slots: ${d.slots.join(' / ')}. Reply with your time and I’ll send the pin + brochure.\\n2) Great meeting you. Here’s the brochure + plans. If this ticks 80% of your needs, shall I send the disclosure & rates so you can run numbers?\\n`
+    }
+
+    function buildTrackerXlsx(){
+      const headers = [[\"Date\",\"Source\",\"Views\",\"Enquiries\",\"Viewings\",\"No. Shows\",\"Offers\",\"Buyer Name\",\"Phone\",\"Email\",\"Finance\",\"Avatar (Family/WFH/Multi‑gen)\",\"Score (A/B/C)\",\"Notes\",\"Next Action\",\"Owner Update Sent\"]]
+      const ws = XLSX.utils.aoa_to_sheet(headers)
+      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'KPI')
+      const ab = XLSX.write(wb, {bookType:'xlsx', type:'array'})
+      return new Blob([ab], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})
+    }
+
+    async function buildPPTX(d, waUrl, qrWaDataUrl, logoDataUrl){
+      const pptx = new PptxGenJS();
+      pptx.layout = 'LAYOUT_16x9'
+
+      function h1(slide, text){ slide.addText(text, {x:0.5,y:0.5,w:9,h:0.8, fontSize:36, bold:true, color:'333333'}) }
+      function p(slide, text, y){ slide.addText(text, {x:0.5,y:y,w:9,h:2, fontSize:16, color:'333333'}) }
+
+      // Cover
+      let s1 = pptx.addSlide();
+      s1.background = {fill: 'F2F2F2'}
+      h1(s1, d.address)
+      p(s1, 'Big‑stand family home • Flexible WFH/flatlet options • Pool • Secure parking', 1.4)
+      s1.addShape(pptx.ShapeType.rect, {x:0,y:6.5,w:10,h:1, fill: {color:'D40511'}})
+      s1.addText('KW Explore • Marketing Deck', {x:0.5,y:6.65,w:9.2,h:0.6, fontSize:16, bold:true, color:'FFFFFF'})
+      if(logoDataUrl){ s1.addImage({data: logoDataUrl, x:8.0, y:0.3, w:1.4, h:0.8, sizing:{type:'contain'}}) }
+
+      // Highlights
+      let s2 = pptx.addSlide(); h1(s2,'Highlights');
+      if(logoDataUrl){ s2.addImage({data:logoDataUrl, x:8.8, y:0.2, w:1.0, h:0.6, sizing:{type:'contain'}}) }
+      const bullets = [
+        `±${d.erf||'1 8xx'} m² erf`, 'Pool & entertainment lapa', 'WFH / flatlet-ready', `Parking for ${d.parking||'6+'}`,'Quick Sandton access'
+      ]
+      s2.addText(bullets.map(b=>'• '+b).join('\\n'), {x:0.7,y:1.6,w:8.6,h:3, fontSize:18, color:'333333'})
+
+      // Location & Access
+      let s3 = pptx.addSlide(); h1(s3,'Location & Access')
+      if(logoDataUrl){ s3.addImage({data:logoDataUrl, x:8.8, y:0.2, w:1.0, h:0.6, sizing:{type:'contain'}}) }
+      p(s3, (d.hooks||[]).map(h=>`• ${h}`).join('\\n'), 1.4)
+
+      // Showday
+      let s4 = pptx.addSlide(); h1(s4,'Showday & Private Viewings')
+      if(logoDataUrl){ s4.addImage({data:logoDataUrl, x:8.8, y:0.2, w:1.0, h:0.6, sizing:{type:'contain'}}) }
+      p(s4, `Showday: ${d.showday}\\nPrivate slots: ${d.slots.join(' / ')}`, 1.4)
+
+      // CTA with QR
+      let s5 = pptx.addSlide(); h1(s5,'Book a Viewing')
+      if(logoDataUrl){ s5.addImage({data:logoDataUrl, x:8.8, y:0.2, w:1.0, h:0.6, sizing:{type:'contain'}}) }
+      s5.addText(waUrl, {x:0.5,y:1.4,w:9,h:1, fontSize:14, color:'333333'})
+      if(qrWaDataUrl){ s5.addImage({data: qrWaDataUrl, x:6.5,y:2.2,w:3,h:3}) }
+      s5.addShape(pptx.ShapeType.rect, {x:0,y:6.5,w:10,h:1, fill: {color:'D40511'}})
+      s5.addText(`${d.agent} • ${d.office}`, {x:0.5,y:6.65,w:9.2,h:0.6, fontSize:16, bold:true, color:'FFFFFF'})
+
+      const blob = await pptx.write('blob')
+      return blob
+    }
+
+    function escapeHtml(str){ return (str||'').replace(/[&<>\\\"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\\\"':'&quot;'}[s])) }
+
+    async function generateAssets(){
+      const d = collectInputs(); const waUrl = waLink(); const stamp = new Date().toISOString().slice(0,10).replace(/-/g,'')
+      const folder = `${slugify(d.suburb||'property')}_${slugify(d.address||'listing')}`
+      const zip = new JSZip()
+
+      const logoDataUrl = await loadLogoDataUrl()
+
+      // QRs
+      const qrWa = await makeQrDataUrl(waUrl)
+      const qrSite = await makeQrDataUrl(d.microsite||'https://example.com/property-page')
+      zip.folder(folder).folder('qr').file('QR_WhatsApp.png', dataUrlToBlob(qrWa))
+      zip.folder(folder).folder('qr').file('QR_Site.png', dataUrlToBlob(qrSite))
+
+      // Social images
+      const ig1 = await drawSocial({w:1080,h:1350,title:`${d.suburb?.toUpperCase()||'KELVIN'} • BIG‑STAND FAMILY HOME`, subtitle:`±${d.erf||'1 8xx'} m² • WFH/Flatlet • Pool • Parking ${d.parking||'6+'}`, footer:'KW EXPLORE FOURWAYS | BOOK ON WHATSAPP', qrDataUrl:qrWa, tag:'JUST LISTED', logoDataUrl:logoDataUrl})
+      const ig2 = await drawSocial({w:1080,h:1350,title:'WORK‑FROM‑HOME READY', subtitle:'Flexible spaces + private garden + pool', footer:'VIEW THIS WEEKEND • TAP WHATSAPP', qrDataUrl:qrWa, tag:'SHOWDAY', logoDataUrl:logoDataUrl})
+      const ig3 = await drawSocial({w:1080,h:1350,title:'BOOK A PRIVATE TOUR', subtitle:`${d.suburb||''} • Easy access corridors`, footer:'SCAN TO CHAT • KW EXPLORE', qrDataUrl:qrWa, tag:'BOOK NOW', logoDataUrl:logoDataUrl})
+      const fb = await drawSocial({w:1200,h:628,title:`${d.suburb?.toUpperCase()||''} • FAMILY + WFH`, subtitle:'Big stand • Pool • Parking 6+', footer:'CHAT ON WHATSAPP • KW EXPLORE', qrDataUrl:qrWa, tag:'NEW', logoDataUrl:logoDataUrl})
+      const r1 = await drawSocial({w:1080,h:1920,title:d.address, subtitle:'Big‑stand family home with pool', footer:'KW EXPLORE • BOOK A VIEWING', qrDataUrl:qrWa, tag:'JUST LISTED', logoDataUrl:logoDataUrl})
+      const r2 = await drawSocial({w:1080,h:1920,title:'BOOK A VIEWING', subtitle:'WhatsApp now or scan QR', footer:'KW EXPLORE FOURWAYS', qrDataUrl:qrWa, tag:'THANKS', logoDataUrl:logoDataUrl})
+      const social = zip.folder(folder).folder('social')
+      social.file('IG_Carousel_1.png', dataUrlToBlob(ig1))
+      social.file('IG_Carousel_2.png', dataUrlToBlob(ig2))
+      social.file('IG_Carousel_3.png', dataUrlToBlob(ig3))
+      social.file('FB_Still_1200x628.png', dataUrlToBlob(fb))
+      social.file('Reel_Title_1080x1920.png', dataUrlToBlob(r1))
+      social.file('Reel_Outro_1080x1920.png', dataUrlToBlob(r2))
+
+      // One-page site + icons + manifest
+      const siteHtml = buildOnePagerHTML(d, waUrl)
+      const site = zip.folder(folder).folder('site')
+      site.file(`${slugify(d.suburb||'property')}-${slugify(d.address||'listing')}.html`, siteHtml)
+      # include webapp icons
+      site.folder('assets').folder('icons').file('favicon-16.png', await (await fetch('assets/icons/favicon-16.png')).blob())
+      site.folder('assets').folder('icons').file('favicon-32.png', await (await fetch('assets/icons/favicon-32.png')).blob())
+      site.folder('assets').folder('icons').file('apple-touch-icon.png', await (await fetch('assets/icons/apple-touch-icon.png')).blob())
+      site.folder('assets').folder('icons').file('icon-192.png', await (await fetch('assets/icons/icon-192.png')).blob())
+      site.folder('assets').folder('icons').file('icon-512.png', await (await fetch('assets/icons/icon-512.png')).blob())
+      site.file('manifest.webmanifest', new Blob([JSON.stringify({
+        name: 'KW Explore Marketing Deck Generator',
+        short_name: 'KW DeckGen',
+        theme_color: '#D40511',
+        background_color: '#ffffff',
+        display: 'standalone',
+        icons: [
+          { src: 'assets/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'assets/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'assets/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png', purpose: 'any' }
+        ]
+      }, null, 2]) , { type:'application/manifest+json' }))
+
+      // Copy pack
+      const copyTxt = buildCopyTxt(d, waUrl)
+      zip.folder(folder).folder('copy').file('Copy_Portal_Social_Showday.txt', copyTxt)
+
+      // KPI tracker
+      const trackerBlob = buildTrackerXlsx()
+      zip.folder(folder).folder('tracker').file('Show_Traffic_KPI_Tracker.xlsx', trackerBlob)
+
+      // PPTX deck
+      const pptxBlob = await buildPPTX(d, waUrl, qrWa, logoDataUrl)
+      zip.folder(folder).folder('deck').file('Marketing_Deck.pptx', pptxBlob)
+
+      const content = await zip.generateAsync({type:'blob'})
+      saveAs(content, `${slugify(d.suburb||'property')}_${slugify(d.address||'listing')}_Asset_Pack_${stamp}.zip`)
+    }
+
+    function dataUrlToBlob(dataUrl){
+      const arr = dataUrl.split(','); const mime = arr[0].match(/:(.*?);/)[1]; const bstr=atob(arr[1]); let n=bstr.length; const u8=new Uint8Array(n); while(n--){u8[n]=bstr.charCodeAt(n)}; return new Blob([u8], {type:mime})
+    }
+    function blobToDataURL(blob){ return new Promise(res=>{ const r = new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(blob) }) }
+
+    // ------- EmailJS helpers & email send -------
+    function loadEmailCfg(){
+      const toE = byId('toEmail'); const pk = byId('emailjsPublicKey'); const s = byId('emailjsServiceId'); const t = byId('emailjsTemplateId');
+      if(!toE) return;
+      toE.value = localStorage.getItem('emailjs_to_email') || toE.value || '';
+      if(pk) pk.value = localStorage.getItem('emailjs_public_key') || pk.value || '';
+      if(s) s.value = localStorage.getItem('emailjs_service_id') || s.value || '';
+      if(t) t.value = localStorage.getItem('emailjs_template_id') || t.value || '';
+      try{ const key = pk?.value?.trim(); if(key) emailjs.init({ publicKey: key }); }catch(e){}
+    }
+    window.addEventListener('DOMContentLoaded', loadEmailCfg)
+
+    function persistEmailCfg(){
+      const toE = byId('toEmail')?.value?.trim()||'';
+      const pk = byId('emailjsPublicKey')?.value?.trim()||'';
+      const s = byId('emailjsServiceId')?.value?.trim()||'';
+      const t = byId('emailjsTemplateId')?.value?.trim()||'';
+      if(toE) localStorage.setItem('emailjs_to_email', toE);
+      if(pk){ localStorage.setItem('emailjs_public_key', pk); try{ emailjs.init({ publicKey: pk }); }catch(e){} }
+      if(s) localStorage.setItem('emailjs_service_id', s);
+      if(t) localStorage.setItem('emailjs_template_id', t);
+      alert('Email settings saved.');
+    }
+    if(byId('btnSaveEmailCfg')) byId('btnSaveEmailCfg').addEventListener('click', persistEmailCfg)
+
+    async function buildAssetsZipBlob(){
+      const d = collectInputs(); const waUrl = waLink(); const stamp = new Date().toISOString().slice(0,10).replace(/-/g,'')
+      const folder = `${slugify(d.suburb||'property')}_${slugify(d.address||'listing')}`
+      const zip = new JSZip()
+
+      const logoDataUrl = await loadLogoDataUrl()
+
+      const qrWa = await makeQrDataUrl(waUrl)
+      const qrSite = await makeQrDataUrl(d.microsite||'https://example.com/property-page')
+      zip.folder(folder).folder('qr').file('QR_WhatsApp.png', dataUrlToBlob(qrWa))
+      zip.folder(folder).folder('qr').file('QR_Site.png', dataUrlToBlob(qrSite))
+
+      const ig1 = await drawSocial({w:1080,h:1350,title:`${d.suburb?.toUpperCase()||'KELVIN'} • BIG‑STAND FAMILY HOME`, subtitle:`±${d.erf||'1 8xx'} m² • WFH/Flatlet • Pool • Parking ${d.parking||'6+'}`, footer:'KW EXPLORE FOURWAYS | BOOK ON WHATSAPP', qrDataUrl:qrWa, tag:'JUST LISTED', logoDataUrl:logoDataUrl})
+      const ig2 = await drawSocial({w:1080,h:1350,title:'WORK‑FROM‑HOME READY', subtitle:'Flexible spaces + private garden + pool', footer:'VIEW THIS WEEKEND • TAP WHATSAPP', qrDataUrl:qrWa, tag:'SHOWDAY', logoDataUrl:logoDataUrl})
+      const ig3 = await drawSocial({w:1080,h:1350,title:'BOOK A PRIVATE TOUR', subtitle:`${d.suburb||''} • Easy access corridors`, footer:'SCAN TO CHAT • KW EXPLORE', qrDataUrl:qrWa, tag:'BOOK NOW', logoDataUrl:logoDataUrl})
+      const fb = await drawSocial({w:1200,h:628,title:`${d.suburb?.toUpperCase()||''} • FAMILY + WFH`, subtitle:'Big stand • Pool • Parking 6+', footer:'CHAT ON WHATSAPP • KW EXPLORE', qrDataUrl:qrWa, tag:'NEW', logoDataUrl:logoDataUrl})
+      const r1 = await drawSocial({w:1080,h:1920,title:d.address, subtitle:'Big‑stand family home with pool', footer:'KW EXPLORE • BOOK A VIEWING', qrDataUrl:qrWa, tag:'JUST LISTED', logoDataUrl:logoDataUrl})
+      const r2 = await drawSocial({w:1080,h:1920,title:'BOOK A VIEWING', subtitle:'WhatsApp now or scan QR', footer:'KW EXPLORE FOURWAYS', qrDataUrl:qrWa, tag:'THANKS', logoDataUrl:logoDataUrl})
+      const social = zip.folder(folder).folder('social')
+      social.file('IG_Carousel_1.png', dataUrlToBlob(ig1))
+      social.file('IG_Carousel_2.png', dataUrlToBlob(ig2))
+      social.file('IG_Carousel_3.png', dataUrlToBlob(ig3))
+      social.file('FB_Still_1200x628.png', dataUrlToBlob(fb))
+      social.file('Reel_Title_1080x1920.png', dataUrlToBlob(r1))
+      social.file('Reel_Outro_1080x1920.png', dataUrlToBlob(r2))
+
+      const siteHtml = buildOnePagerHTML(d, waUrl)
+      const site = zip.folder(folder).folder('site')
+      site.file(`${slugify(d.suburb||'property')}-${slugify(d.address||'listing')}.html`, siteHtml)
+      // add icons + manifest to site
+      const get = async p => await (await fetch(p)).blob()
+      site.folder('assets').folder('icons').file('favicon-16.png', await get('assets/icons/favicon-16.png'))
+      site.folder('assets').folder('icons').file('favicon-32.png', await get('assets/icons/favicon-32.png'))
+      site.folder('assets').folder('icons').file('apple-touch-icon.png', await get('assets/icons/apple-touch-icon.png'))
+      site.folder('assets').folder('icons').file('icon-192.png', await get('assets/icons/icon-192.png'))
+      site.folder('assets').folder('icons').file('icon-512.png', await get('assets/icons/icon-512.png'))
+      site.file('manifest.webmanifest', new Blob([JSON.stringify({
+        name: 'KW Explore Marketing Deck Generator',
+        short_name: 'KW DeckGen',
+        theme_color: '#D40511',
+        background_color: '#ffffff',
+        display: 'standalone',
+        icons: [
+          { src: 'assets/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'assets/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'assets/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png', purpose: 'any' }
+        ]
+      }, null, 2])], { type:'application/manifest+json' }))
+
+      const copyTxt = buildCopyTxt(d, waUrl)
+      zip.folder(folder).folder('copy').file('Copy_Portal_Social_Showday.txt', copyTxt)
+
+      const trackerBlob = buildTrackerXlsx()
+      zip.folder(folder).folder('tracker').file('Show_Traffic_KPI_Tracker.xlsx', trackerBlob)
+
+      const pptxBlob = await buildPPTX(d, waUrl, qrWa, logoDataUrl)
+      zip.folder(folder).folder('deck').file('Marketing_Deck.pptx', pptxBlob)
+
+      const blob = await zip.generateAsync({type:'blob'})
+      const filename = `${slugify(d.suburb||'property')}_${slugify(d.address||'listing')}_Asset_Pack_${stamp}.zip`
+      return { blob, filename, waUrl, d }
+    }
+
+    async function emailResults(){
+      const svc = localStorage.getItem('emailjs_service_id') || (byId('emailjsServiceId')?.value.trim()||'')
+      const tmpl = localStorage.getItem('emailjs_template_id') || (byId('emailjsTemplateId')?.value.trim()||'')
+      const pk = localStorage.getItem('emailjs_public_key') || (byId('emailjsPublicKey')?.value.trim()||'')
+      const toEmail = localStorage.getItem('emailjs_to_email') || (byId('toEmail')?.value.trim()||'')
+      if(!svc || !tmpl || !pk || !toEmail){ throw new Error('Email settings are missing. Save Public Key, Service ID, Template ID and To email first.') }
+      try{ emailjs.init({ publicKey: pk }) }catch(e){}
+      const { blob, filename, waUrl, d } = await buildAssetsZipBlob()
+      let params = { to_email: toEmail, property_address: d.address, suburb: d.suburb, wa_link: waUrl, filename: filename }
+      if (blob.size <= 9.5*1024*1024){
+        const base64 = await blobToDataURL(blob)
+        params.content = base64
+      }
+      return emailjs.send(svc, tmpl, params)
+    }
+
+    if(byId('btnSaveEmailCfg')) byId('btnSaveEmailCfg').addEventListener('click', persistEmailCfg)
+    if(byId('btnEmailZip')) byId('btnEmailZip').addEventListener('click', async ()=>{
+      const btn = byId('btnEmailZip'); btn.disabled = true; const old=btn.textContent; btn.textContent='Emailing…'
+      try{ await emailResults(); alert('Email sent! If no attachment arrived, it was larger than ~10MB — the ZIP was still downloaded locally.'); }
+      catch(e){ console.error(e); alert('Failed to email: ' + (e?.text || e?.message || e)) }
+      finally{ btn.disabled=false; btn.textContent=old }
+    })
+
+    byId('btnGen').addEventListener('click', async ()=>{
+      try{ byId('btnGen').disabled=true; byId('btnGen').textContent='Generating…'; await generateAssets() } finally { byId('btnGen').disabled=false; byId('btnGen').textContent='Generate Asset Pack' }
+    })
+
+    byId('btnDeck').addEventListener('click', async ()=>{
+      const d = collectInputs(); const waUrl = waLink(); const qrWa = await makeQrDataUrl(waUrl); const logoDataUrl = await loadLogoDataUrl(); const blob = await buildPPTX(d, waUrl, qrWa, logoDataUrl); saveAs(blob, `Marketing_Deck_${slugify(d.suburb||'property')}_${slugify(d.address||'listing')}.pptx`)
+    })
+  </script>
+</body>
+</html>
